@@ -10,7 +10,7 @@
 #define D7 13
 #define D8 15
 
-#define DHTPIN D2
+#define DHTPIN D3
 #define DHTTYPE DHTesp::DHT22
 
 float humidity, temperature;
