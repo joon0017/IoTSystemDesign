@@ -3,8 +3,6 @@
 #include <Adafruit_GFX.h>
 #include <SPI.h>
 #include <DHTesp.h>
-#include <string.h>
-#include <stdlib.h>
 
 #define D0 16
 #define D1 5
@@ -64,10 +62,12 @@ void loop() {
   display.setCursor(0, 0);     // Start at top-left corner
   display.cp437(true);         // Use full 256 char 'Code Page 437' font
 
-  display.print("Temperature = ");
-  display.println(temperature);
-  display.print("Humidity = ");
+  display.print("T: ");
+  display.print(temperature);
+  display.println("ºC");
+  display.print("H: ");
   display.print(humidity);
+  display.println("%");
 
   display.display();
 

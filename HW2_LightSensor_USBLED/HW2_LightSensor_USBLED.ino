@@ -1,5 +1,18 @@
+#include <Adafruit_SSD1306.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <SPI.h>
+#include <DHTesp.h>
+
 #define D0 16
+#define D1 5
+#define D2 4
+#define D3 0
 #define D4 2
+#define D5 14
+#define D6 12
+#define D7 13
+#define D8 15
 
 #define LIGHT_PIN A0  // 조도센서 연결핀
 #define LED_PIN D0 
@@ -9,9 +22,30 @@
 #define LED_ON HIGH
 #define LED_OFF LOW
 
+//DHT related variables
+#define DHT_PIN D3
+#define DHTTYPE DHTesp::DHT22
+
+//OLED variables
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 32
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
 int lightValue;
 int relay_state = RELAY_OFF;
 int usable = 1;
+
+unsigned long lightTimer;
+unsigned long tempTimer;
+unsigned long currentTime;
+
+float humidity, temperature;
+DHTesp dht;
+
+void displayDHT();
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,26 +56,72 @@ void setup() {
   pinMode(LIGHT_PIN, INPUT); //light sensor input
   pinMode(RELAY1_PIN,OUTPUT); //relay signals
   digitalWrite(RELAY1_PIN,RELAY_OFF); //relay off
-  usable = 1;
+  //USB LED setup complete
 
+  dht.setup(DHT_PIN,DHTTYPE);
+  //dht setup complete
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+  display.clearDisplay();
+  //display setup complete
+
+
+  usable = 1;
+  currentTime = millis();
+  lightTimer = currentTime;
+  tempTimer = currentTime;
+  //Asynchronous timer setup complete
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  currentTime = millis();
   lightValue = analogRead(LIGHT_PIN);
 
-  if(usable == 1 && lightValue < 500) {
+  if (currentTime - tempTimer > 1000) {
+    displayDHT();
+    //change light value part so it displays temp value on oled
+    tempTimer = currentTime;
+  }
+
+  if(usable = 1 && lightValue < 500)
+  {
     relay_state = RELAY_ON;
-  }
-  else if (usable == 0 && lightValue > 700) usable = 1;
-
-  if (relay_state == RELAY_ON) {
+    lightTimer = currentTime;
     usable = 0;
-    digitalWrite(RELAY1_PIN,relay_state);
-    delay(10000);
+  }
+  else if(usable = 0 && currentTime - lightTimer > 10000)
+  {
     relay_state = RELAY_OFF;
-    digitalWrite(RELAY1_PIN,relay_state);
+    if(lightValue > 700)
+      usable = 1;
   }
 
-  delay(200);
+  digitalWrite(RELAY1_PIN,relay_state);
+
+}
+
+void displayDHT(){
+  delay(dht.getMinimumSamplingPeriod());
+  humidity = dht.getHumidity();
+  temperature = dht.getTemperature();
+
+  display.clearDisplay();
+
+  display.setTextSize(1.5);      // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE); // Draw white text
+  display.setCursor(0, 0);     // Start at top-left corner
+  display.cp437(true);         // Use full 256 char 'Code Page 437' font
+
+  display.print("T: ");
+  display.print(temperature);
+  display.println("ºC");
+  display.print("H: ");
+  display.print(humidity);
+  display.println("%");
+
+  display.display();
 }
