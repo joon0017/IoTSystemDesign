@@ -80,20 +80,21 @@ void loop() {
   // put your main code here, to run repeatedly:
   currentTime = millis();
   lightValue = analogRead(LIGHT_PIN);
-
+  Serial.print("Timer difference: ");
+  Serial.println(currentTime - lightTimer);
   if (currentTime - tempTimer > 1000) {
     displayDHT();
     //change light value part so it displays temp value on oled
     tempTimer = currentTime;
   }
 
-  if(usable = 1 && lightValue < 500)
+  if((relay_state != RELAY_ON && lightValue < 500) && usable == 1)
   {
     relay_state = RELAY_ON;
     lightTimer = currentTime;
     usable = 0;
   }
-  else if(usable = 0 && currentTime - lightTimer > 10000)
+  else if(currentTime - lightTimer > 10000)
   {
     relay_state = RELAY_OFF;
     if(lightValue > 700)
@@ -105,7 +106,6 @@ void loop() {
 }
 
 void displayDHT(){
-  delay(dht.getMinimumSamplingPeriod());
   humidity = dht.getHumidity();
   temperature = dht.getTemperature();
 
@@ -115,10 +115,10 @@ void displayDHT(){
   display.setTextColor(SSD1306_WHITE); // Draw white text
   display.setCursor(0, 0);     // Start at top-left corner
   display.cp437(true);         // Use full 256 char 'Code Page 437' font
-
   display.print("T: ");
   display.print(temperature);
-  display.println("ºC");
+  display.print((char)248); //°
+  display.println("C");
   display.print("H: ");
   display.print(humidity);
   display.println("%");

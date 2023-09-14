@@ -61,10 +61,10 @@ void loop() {
   display.setTextColor(SSD1306_WHITE); // Draw white text
   display.setCursor(0, 0);     // Start at top-left corner
   display.cp437(true);         // Use full 256 char 'Code Page 437' font
-
   display.print("T: ");
   display.print(temperature);
-  display.println("ºC");
+  display.print((char)248); //°
+  display.println("C");
   display.print("H: ");
   display.print(humidity);
   display.println("%");
